@@ -1,0 +1,121 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  phone     String?
+  role      UserRole @default(USER)
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cart      Cart?
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  userId          Int? // optional دلوقتي، بعدين هيبقى مطلوب
+  totalAmount     Decimal     @db.Decimal(10, 2)
+  status          OrderStatus @default(PENDING)
+  items           OrderItem[]
+  shippingAddress Json // { name, phone, address, city, etc... }
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  user            User?       @relation(fields: [userId], references: [id])
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2) // سعر المنتج وقت الطلب
+}
+
+model Category {
+  id        Int        @id @default(autoincrement())
+  name      String
+  slug      String     @unique
+  image     String?
+  parentId  Int?
+  parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryTree")
+  products  Product[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Product {
+  id          Int                @id @default(autoincrement())
+  title       String
+  slug        String             @unique
+  description String?
+  price       Decimal            @db.Decimal(10, 2)
+  images      String[]
+  stock       Int                @default(0)
+  isActive    Boolean            @default(true)
+  categoryId  Int
+  category    Category           @relation(fields: [categoryId], references: [id])
+  attributes  ProductAttribute[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+}
+
+model ProductAttribute {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String // color, size, material, brand...
+  value     String
+
+  @@unique([productId, name, value])
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  token     String?    @unique
+  userId    Int?       @unique
+  user      User?      @relation(fields: [userId], references: [id])
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([token])
+}
+
+model CartItem {
+  id        Int     @id @default(autoincrement())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int     @default(1)
+
+  @@unique([cartId, productId])
+}
