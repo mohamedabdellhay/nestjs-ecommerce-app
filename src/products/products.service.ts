@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GetProductsFilterDto } from './dto/get-products-filter.dto';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -83,14 +87,25 @@ export class ProductsService {
   }
 
   async findOne(id: number) {
-    return this.prisma.product.findUnique({
+    if (!id || isNaN(id)) {
+      throw new BadRequestException('product id must be a valid number');
+    }
+
+    const product = await this.prisma.product.findUnique({
       where: { id },
       include: {
         category: { select: { name: true, slug: true } },
         attributes: true,
       },
     });
+
+    if (!product || !product.isActive) {
+      throw new NotFoundException(' Product Not Found');
+    }
+
+    return product;
   }
+
   async create(createDto: CreateProductDto) {
     const { attributes, title, ...rest } = createDto;
 

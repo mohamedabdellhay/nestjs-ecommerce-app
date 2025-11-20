@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // src/cart/cart.controller.ts
+
 import {
   Controller,
   Get,
@@ -12,12 +13,13 @@ import {
   Req,
   Res,
   Param,
-  ParseIntPipe, // ← مهم
+  ParseIntPipe,
 } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { AddToCartDto } from './dto/add-to-cart.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import express from 'express';
+import type { Request } from 'express';
 
 @ApiTags('cart')
 @Controller('cart')
@@ -25,25 +27,28 @@ export class CartController {
   constructor(private readonly cartService: CartService) {}
 
   @Get()
-  @ApiOperation({ summary: 'show current cart' })
+  @ApiOperation({ summary: 'show cart' })
   async getCart(
     @Req() req: express.Request,
     @Res({ passthrough: true }) res: express.Response,
   ) {
     const cart = await this.cartService.getCart(req);
-    this.setCartCookie(res, cart.token as string);
+    this.setCartCookie(res, cart.token ?? '');
     return cart;
   }
 
   @Post('add')
   @ApiOperation({ summary: 'add product to cart' })
   async addToCart(
-    @Req() req: express.Request,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: express.Response,
     @Body() dto: AddToCartDto,
   ) {
+    // console.log('Adding to cart:', dto);
+    // console.log('req', req.cookies);
+
     const result = await this.cartService.addToCart(req, dto);
-    this.setCartCookie(res, result.token as string);
+    this.setCartCookie(res, result.token ?? '');
     return result;
   }
 
@@ -51,37 +56,40 @@ export class CartController {
   @ApiOperation({ summary: 'update product quantity in cart' })
   async updateQuantity(
     @Req() req: express.Request,
-    @Body() body: { productId: number; quantity: number },
+    @Body('productId', ParseIntPipe) productId: number,
+    @Body('quantity', ParseIntPipe) quantity: number,
   ) {
-    return this.cartService.updateQuantity(req, body.productId, body.quantity);
+    return this.cartService.updateQuantity(req, productId, quantity);
   }
 
   @Delete('remove/:productId')
   @ApiOperation({ summary: 'remove product from cart' })
   async removeFromCart(
     @Req() req: express.Request,
-    @Param('productId', ParseIntPipe) productId: number, // ← صح 100%
+    @Param('productId', ParseIntPipe) productId: number,
   ) {
     return this.cartService.removeFromCart(req, productId);
   }
 
   @Delete('clear')
-  @ApiOperation({ summary: 'clear the entire cart' })
+  @ApiOperation({ summary: 'clear cart' })
   async clearCart(
     @Req() req: express.Request,
     @Res({ passthrough: true }) res: express.Response,
   ) {
     await this.cartService.clearCart(req);
     res.clearCookie('cart_token');
-    return { message: 'Cart has been cleared successfully' };
+    return { message: 'Cart cleared successfully' };
   }
 
   private setCartCookie(res: express.Response, token: string) {
-    res.cookie('cart_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    });
+    if (token) {
+      res.cookie('cart_token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
+    }
   }
 }

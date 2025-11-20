@@ -40,8 +40,8 @@ export class ProductsController {
     status: 200,
     description: 'Product retrieved successfully',
   })
-  findOne(@Query('id') id: string) {
-    return this.productsService.findOne(+id);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.findOne(id);
   }
 
   @Post()

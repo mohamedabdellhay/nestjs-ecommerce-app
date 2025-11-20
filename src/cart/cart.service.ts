@@ -20,7 +20,6 @@ export class CartService {
   constructor(private prisma: PrismaService) {}
 
   private async getActiveCart(userId?: number, token?: string) {
-    // 1) لو يوزر مسجل دخول
     if (userId) {
       let cart = await this.prisma.cart.findUnique({ where: { userId } });
       if (!cart) {
@@ -96,11 +95,11 @@ export class CartService {
   async getCart(req: Request) {
     const userId = (req.user as any)?.sub;
     const token =
-      req.cookies?.cart_token ||
-      (req.headers['x-cart-token'] as string | undefined);
+      req.cookies?.cart_token || (req.headers['x-cart-token'] as string);
 
     const cart = await this.getActiveCart(userId, token);
 
+    // ← السطر اللي كان ناقص: جيب السلة كاملة تاني بعد أي عملية
     const fullCart = await this.prisma.cart.findUnique({
       where: { id: cart.id },
       include: {
@@ -125,34 +124,42 @@ export class CartService {
     return {
       id: cart.id,
       token: userId ? null : cart.token,
-      totalItems: items.reduce((s, i) => s + i.quantity, 0),
+      totalItems: items.reduce((sum, i) => sum + i.quantity, 0),
       totalPrice: items.reduce(
-        (s, i) => s + Number(i.product.price) * i.quantity,
+        (sum, i) => sum + Number(i.product.price) * i.quantity,
         0,
       ),
-      items,
+      items: items.map((i) => ({
+        id: i.id,
+        quantity: i.quantity,
+        product: {
+          id: i.product.id,
+          title: i.product.title,
+          price: i.product.price,
+          images: i.product.images,
+          stock: i.product.stock,
+        },
+      })),
     };
   }
 
   async addToCart(req: Request, dto: AddToCartDto) {
     const userId = (req.user as any)?.sub;
     const token =
-      req.cookies?.cart_token ||
-      (req.headers['x-cart-token'] as string | undefined);
+      req.cookies?.cart_token || (req.headers['x-cart-token'] as string);
 
     const cart = await this.getActiveCart(userId, token);
+
+    console.log('Adding to cart:', dto);
+    console.log('req', req.cookies);
+    console.log('token', token);
 
     const product = await this.prisma.product.findUnique({
       where: { id: dto.productId, isActive: true },
     });
-
-    if (!product) throw new NotFoundException('المنتج غير موجود');
+    if (!product) throw new NotFoundException('Product not found');
 
     const quantity = dto.quantity ?? 1;
-
-    if (product.stock < quantity) {
-      throw new BadRequestException('الكمية غير متوفرة');
-    }
 
     const existing = await this.prisma.cartItem.findUnique({
       where: {
@@ -163,7 +170,7 @@ export class CartService {
     if (existing) {
       await this.prisma.cartItem.update({
         where: { id: existing.id },
-        data: { quantity: existing.quantity + quantity },
+        data: { quantity: { increment: quantity } }, // ← أحسن طريقة
       });
     } else {
       await this.prisma.cartItem.create({
@@ -171,12 +178,13 @@ export class CartService {
       });
     }
 
+    // ← أهم سطر في التاريخ: رجّع السلة محدثة كاملة بعد الإضافة مباشرة
     return this.getCart(req);
   }
 
   async updateQuantity(req: Request, productId: number, quantity: number) {
     if (quantity <= 0)
-      throw new BadRequestException('الكمية يجب أن تكون أكبر من صفر');
+      throw new BadRequestException('Quantity must be greater than zero');
 
     const userId = (req.user as any)?.sub;
     const token =
@@ -220,6 +228,6 @@ export class CartService {
       where: { cartId: cart.id },
     });
 
-    return { message: 'تم تفريغ السلة بنجاح' };
+    return { message: 'Cart cleared successfully' };
   }
 }
