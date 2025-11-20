@@ -8,22 +8,20 @@ import {
   Patch,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { RolesGuard } from '../auth/roles.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @ApiTags('categories')
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
-
-  @Post()
-  @ApiOperation({ summary: 'create a new category' })
-  create(@Body() dto: CreateCategoryDto) {
-    return this.categoriesService.create(dto);
-  }
 
   @Get()
   @ApiOperation({ summary: 'fetch all categories in a tree structure' })
@@ -37,7 +35,17 @@ export class CategoriesController {
     return this.categoriesService.findOne(id);
   }
 
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'create a new category' })
+  create(@Body() dto: CreateCategoryDto) {
+    return this.categoriesService.create(dto);
+  }
+
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @ApiOperation({ summary: 'update a category' })
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -47,6 +55,8 @@ export class CategoriesController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @ApiOperation({
     summary: 'delete a category (if it does not contain products)',
   })
