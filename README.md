@@ -98,6 +98,6 @@ npx ts-node seed.ts  # fill database with real data
 ## Author
 
 **Mohamed Abdellhay**
-Backend Developer | NodeJs| express | NestJS
-GitHub: https://github.com/mohamedabdellhay
+Backend Developer | NodeJs| express | NestJS<br />
+GitHub: https://github.com/mohamedabdellhay<br />
 LinkedIn: https://linkedin.com/in/mohamedabellhay
