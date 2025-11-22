@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-// src/main.ts
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
@@ -8,6 +8,11 @@ import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.enableCors({
+    origin: ['http://localhost:3000', 'http://192.168.1.9:3000'],
+    credentials: true,
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -37,8 +42,12 @@ async function bootstrap() {
     customCss: '.swagger-ui .topbar { background-color: #1a1a1a; }',
   });
   app.use(cookieParser());
-  await app.listen(3000);
-  console.log(`🚀 Application is running on: http://localhost:3000`);
-  console.log(`📚 Swagger Docs: http://localhost:3000/api/v1`);
+  await app.listen(process.env.PORT || 3001);
+  console.log(
+    `🚀 Application is running on: http://localhost:${process.env.PORT || 3001}`,
+  );
+  console.log(
+    `📚 Swagger Docs: http://localhost:${process.env.PORT || 3001}/api/v1`,
+  );
 }
 bootstrap();
