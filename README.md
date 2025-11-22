@@ -1,6 +1,3 @@
-**README.md** (انسخ ده كله واحفظه في root المشروع باسم `README.md`)
-
-````markdown
 # E-Commerce API (NestJS + Prisma + PostgreSQL)
 
 **A complete, production-ready e-commerce backend** built by **Mohamed Abdellhay** in November 2025  
@@ -50,6 +47,7 @@ Swagger Docs: `https://your-project.up.railway.app/api/v1`
    cd ecommerce-nestjs-prisma
    npm install
    ```
+
 ````
 
 2. Setup PostgreSQL & .env
@@ -100,7 +98,8 @@ npx ts-node seed.ts  # fill database with real data
 
 ## Author
 
-**Mohamed Abdellhay**  
+**Mohamed Abdellhay**
 Backend Developer | NodeJs| express | NestJS
 GitHub: https://github.com/mohamedabdellhay
 LinkedIn: https://linkedin.com/in/mohamedabellhay
+````
