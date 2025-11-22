@@ -42,13 +42,12 @@ Swagger Docs: `https://your-project.up.railway.app/api/v1`
 ## Quick Start (Local)
 
 1. Clone & install
+
    ```bash
    git clone https://github.com/yourusername/ecommerce-nestjs-prisma.git
    cd ecommerce-nestjs-prisma
    npm install
    ```
-
-````
 
 2. Setup PostgreSQL & .env
 
@@ -102,4 +101,3 @@ npx ts-node seed.ts  # fill database with real data
 Backend Developer | NodeJs| express | NestJS
 GitHub: https://github.com/mohamedabdellhay
 LinkedIn: https://linkedin.com/in/mohamedabellhay
-````
