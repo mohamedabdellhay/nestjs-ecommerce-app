@@ -1,12 +1,9 @@
 # E-Commerce API (NestJS + Prisma + PostgreSQL)
 
 **A complete, production-ready e-commerce backend** built by **Mohamed Abdellhay** in November 2025  
-Fully functional store like Amazon, Noon, and Shopify — ready for Next.js frontend or mobile app.
+Fully functional store for Next.js frontend or mobile app.
 
-Live Backend (after deployment): `https://your-project.up.railway.app`  
-Swagger Docs: `https://your-project.up.railway.app/api/v1`
-
-## Features (100% Complete)
+## Features
 
 - User Registration & Login (JWT + bcrypt)
 - Role-based access (USER / ADMIN)
@@ -44,8 +41,8 @@ Swagger Docs: `https://your-project.up.railway.app/api/v1`
 1. Clone & install
 
    ```bash
-   git clone https://github.com/yourusername/ecommerce-nestjs-prisma.git
-   cd ecommerce-nestjs-prisma
+   git clone https://github.com/mohamedabdellhay/nestjs-ecommerce-app
+   cd nestjs-ecommerce-app
    npm install
    ```
 
